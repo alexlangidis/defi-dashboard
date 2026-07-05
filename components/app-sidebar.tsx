@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LineChart } from "lucide-react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SearchShortcut } from "@/components/search-shortcut";
 import {
   Sidebar,
   SidebarContent,
@@ -16,16 +17,26 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { NAV_ITEMS } from "@/lib/constants/navigation";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5"
+          onClick={closeMobileSidebar}
+        >
           <div className="relative flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent glow-primary">
             <LineChart className="size-4 text-primary-foreground" />
           </div>
@@ -83,10 +94,7 @@ export function AppSidebar() {
             CoinGecko · GeckoTerminal
           </p>
           <p className="text-[0.7rem] text-muted-foreground">
-            Press{" "}
-            <kbd className="rounded border border-border bg-muted/60 px-1 py-0.5 font-mono text-[0.6rem]">
-              ⌘K
-            </kbd>{" "}
+            Press <SearchShortcut className="rounded border border-border bg-muted/60 px-1 py-0.5 font-mono text-[0.6rem]" />{" "}
             to search
           </p>
         </div>

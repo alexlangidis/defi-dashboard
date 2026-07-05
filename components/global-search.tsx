@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Clock, ExternalLink, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { SearchShortcut } from "@/components/search-shortcut";
 import {
   CommandDialog,
   CommandEmpty,
@@ -93,9 +94,7 @@ export function GlobalSearch() {
       >
         <Search className="size-3.5" />
         Search tokens & pools…
-        <kbd className="pointer-events-none ml-auto rounded border bg-muted px-1.5 font-mono text-[10px]">
-          ⌘K
-        </kbd>
+        <SearchShortcut className="pointer-events-none ml-auto rounded border bg-muted px-1.5 font-mono text-[10px]" />
       </Button>
       <Button
         variant="ghost"
