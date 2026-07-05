@@ -1,12 +1,9 @@
-import { getTopGainers, getTopLosers } from "@/lib/api/coingecko";
+import { getMarketMovers } from "@/lib/api/coingecko";
 import { FadeIn } from "@/components/animations";
 import { MoversSection } from "@/components/movers-section";
 
 export async function DashboardMoversSection() {
-  const [gainers, losers] = await Promise.all([
-    getTopGainers(20),
-    getTopLosers(20),
-  ]);
+  const { gainers, losers } = await getMarketMovers(20);
 
   if (gainers.length === 0 && losers.length === 0) {
     return (

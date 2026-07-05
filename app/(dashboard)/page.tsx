@@ -33,11 +33,17 @@ export default function HomePage() {
           <DashboardMoversSection />
         </Suspense>
 
-        <div className="grid gap-6 xl:grid-cols-3">
+        <div className="grid gap-6 2xl:grid-cols-3 2xl:items-stretch">
           <Suspense fallback={<DexSectionSkeleton />}>
             <DashboardDexSection />
           </Suspense>
-          <Suspense fallback={<SummaryCardSkeleton />}>
+          <Suspense
+            fallback={
+              <div className="2xl:h-full">
+                <SummaryCardSkeleton />
+              </div>
+            }
+          >
             <DashboardSummarySection />
           </Suspense>
         </div>

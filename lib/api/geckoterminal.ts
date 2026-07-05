@@ -122,6 +122,8 @@ export type DexPool = {
   dexImageUrl?: string | null;
   baseToken: PoolToken;
   quoteToken: PoolToken;
+  baseTokenPriceUsd: number | null;
+  quoteTokenPriceUsd: number | null;
   reserveUsd: number;
   volume24h: number;
   priceChange24h: number;
@@ -154,6 +156,12 @@ function tokenIdToAddress(tokenId: string, network: string): string {
 function parsePoolSymbols(name: string): [string, string] {
   const [base = "", quote = ""] = name.split("/").map((part) => part.trim());
   return [base, quote];
+}
+
+function parseOptionalUsd(value: string | null | undefined) {
+  if (value == null || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function resolveToken(
@@ -239,6 +247,8 @@ function mapPool(
       network,
       quoteSymbol,
     ),
+    baseTokenPriceUsd: parseOptionalUsd(pool.attributes.base_token_price_usd),
+    quoteTokenPriceUsd: parseOptionalUsd(pool.attributes.quote_token_price_usd),
     reserveUsd: Number(pool.attributes.reserve_in_usd) || 0,
     volume24h: Number(pool.attributes.volume_usd?.h24) || 0,
     priceChange24h: Number(pool.attributes.price_change_percentage?.h24) || 0,

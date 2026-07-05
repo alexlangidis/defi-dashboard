@@ -11,7 +11,7 @@ export async function DashboardDexSection() {
   const dexPools = enrichDexPools(dexPoolsRaw, networkIcons);
 
   return (
-    <FadeIn delay={0.1} className="space-y-4 xl:col-span-2">
+    <FadeIn delay={0.1} className="min-w-0 space-y-4 2xl:col-span-2">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold tracking-tight">
           Trending DEX Pools
@@ -22,7 +22,7 @@ export async function DashboardDexSection() {
           DEX pool data is temporarily unavailable.
         </div>
       ) : (
-        <StaggerContainer className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StaggerContainer className="grid gap-4 sm:grid-cols-2">
           {dexPools.slice(0, 6).map((pool, i) => (
             <StaggerItem key={pool.id}>
               <DexPoolCard pool={pool} rank={i + 1} className="h-full" />

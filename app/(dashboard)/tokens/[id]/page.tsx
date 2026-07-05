@@ -4,7 +4,7 @@ import { ExternalLink, Globe } from "lucide-react";
 
 import { CoinImage } from "@/components/coin-image";
 
-import { AreaChart } from "@/components/area-chart";
+import { TokenPriceChart } from "@/components/token-price-chart";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { PercentBadge } from "@/components/percent-badge";
@@ -12,6 +12,7 @@ import { StatCard } from "@/components/stat-card";
 import { WatchlistButton } from "@/components/watchlist-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCoinDetail, getCoinMarketChart } from "@/lib/api/coingecko";
+import { DEFAULT_TOKEN_CHART_PERIOD } from "@/lib/chart-periods";
 import { formatNumber, formatUsd } from "@/lib/format";
 
 function formatDate(iso: string) {
@@ -35,7 +36,7 @@ export default async function TokenDetailPage({
   try {
     const [detail, prices] = await Promise.all([
       getCoinDetail(id),
-      getCoinMarketChart(id, 7),
+      getCoinMarketChart(id, DEFAULT_TOKEN_CHART_PERIOD.days),
     ]);
     coin = detail;
     chart = prices.map(([ts, price]) => ({ x: ts, y: price }));
@@ -90,16 +91,7 @@ export default async function TokenDetailPage({
         </FadeIn>
 
         <FadeIn delay={0.05}>
-          <Card className="relative overflow-hidden">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium tracking-tight text-muted-foreground">
-                7-Day Price
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="h-40">
-              <AreaChart data={chart} />
-            </CardContent>
-          </Card>
+          <TokenPriceChart coinId={coin.id} initialData={chart} />
         </FadeIn>
 
         <StaggerContainer className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

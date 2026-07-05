@@ -199,21 +199,125 @@ export async function searchCoins(query: string) {
   return data?.coins?.slice(0, 8) ?? [];
 }
 
-export const getTopGainers = cache(async (perPage = 20) => {
+export const getMarketMovers = cache(async (perPage = 20) => {
+  const proMovers = await fetchProTopGainersLosers(perPage);
+  if (proMovers) return proMovers;
+
   const data = await fetchCoinGecko<MarketCoin[]>(
-    `/coins/markets?vs_currency=usd&order=price_change_percentage_24h_desc&per_page=${perPage}&page=1&sparkline=true&price_change_percentage=7d`,
+    `/coins/markets?vs_currency=usd&order=volume_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d`,
     60,
   );
-  return data ?? [];
+
+  return splitMarketMovers(data ?? [], perPage);
+});
+
+export const getTopGainers = cache(async (perPage = 20) => {
+  return (await getMarketMovers(perPage)).gainers;
 });
 
 export const getTopLosers = cache(async (perPage = 20) => {
-  const data = await fetchCoinGecko<MarketCoin[]>(
-    `/coins/markets?vs_currency=usd&order=price_change_percentage_24h_asc&per_page=${perPage}&page=1&sparkline=true&price_change_percentage=7d`,
+  return (await getMarketMovers(perPage)).losers;
+});
+
+type TopGainersLosersResponse = {
+  top_gainers?: Array<{
+    id: string;
+    symbol: string;
+    name: string;
+    image: string;
+    market_cap_rank: number;
+    usd?: number;
+    usd_24h_vol?: number;
+    usd_24h_change?: number;
+    sparkline?: string;
+  }>;
+  top_losers?: Array<{
+    id: string;
+    symbol: string;
+    name: string;
+    image: string;
+    market_cap_rank: number;
+    usd?: number;
+    usd_24h_vol?: number;
+    usd_24h_change?: number;
+    sparkline?: string;
+  }>;
+};
+
+async function fetchProTopGainersLosers(perPage: number) {
+  const { apiKey } = getCoinGeckoConfig();
+  if (!apiKey) return null;
+
+  const data = await fetchCoinGecko<TopGainersLosersResponse>(
+    `/coins/top_gainers_losers?vs_currency=usd&duration=24h&top_coins=1000`,
     60,
   );
-  return data ?? [];
-});
+
+  if (!data?.top_gainers?.length && !data?.top_losers?.length) return null;
+
+  return {
+    gainers: (data.top_gainers ?? [])
+      .slice(0, perPage)
+      .map(mapTopMoverToMarketCoin),
+    losers: (data.top_losers ?? [])
+      .slice(0, perPage)
+      .map(mapTopMoverToMarketCoin),
+  };
+}
+
+function mapTopMoverToMarketCoin(
+  coin: NonNullable<TopGainersLosersResponse["top_gainers"]>[number],
+): MarketCoin {
+  return {
+    id: coin.id,
+    symbol: coin.symbol,
+    name: coin.name,
+    image: coin.image,
+    current_price: coin.usd ?? 0,
+    market_cap: 0,
+    market_cap_rank: coin.market_cap_rank,
+    total_volume: coin.usd_24h_vol ?? 0,
+    price_change_percentage_24h: coin.usd_24h_change ?? 0,
+    sparkline_in_7d: parseSparkline(coin.sparkline),
+  };
+}
+
+function parseSparkline(sparkline: string | undefined) {
+  if (!sparkline) return undefined;
+  try {
+    return { price: JSON.parse(sparkline) as number[] };
+  } catch {
+    return undefined;
+  }
+}
+
+function splitMarketMovers(coins: MarketCoin[], perPage: number) {
+  const gainers = [...coins]
+    .filter(
+      (coin) =>
+        coin.price_change_percentage_24h != null &&
+        coin.price_change_percentage_24h > 0,
+    )
+    .sort(
+      (a, b) =>
+        b.price_change_percentage_24h - a.price_change_percentage_24h,
+    )
+    .slice(0, perPage);
+
+  const losers = [...coins]
+    .filter(
+      (coin) =>
+        coin.price_change_percentage_24h != null &&
+        coin.price_change_percentage_24h < 0,
+    )
+    .sort(
+      (a, b) =>
+        a.price_change_percentage_24h - b.price_change_percentage_24h,
+    )
+    .slice(0, perPage);
+
+  return { gainers, losers };
+}
 
 export type MarketChartPoint = [number, number];
 

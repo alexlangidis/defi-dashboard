@@ -21,8 +21,8 @@ export async function DashboardSummarySection() {
   });
 
   return (
-    <FadeIn delay={0.15}>
-      <MarketSummaryCard data={summary} />
+    <FadeIn delay={0.15} className="min-w-0 2xl:h-full">
+      <MarketSummaryCard data={summary} className="2xl:h-full" />
     </FadeIn>
   );
 }

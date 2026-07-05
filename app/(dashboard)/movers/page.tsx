@@ -2,15 +2,12 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { MoverCard } from "@/components/mover-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getTopGainers, getTopLosers } from "@/lib/api/coingecko";
+import { getMarketMovers } from "@/lib/api/coingecko";
 
 export const revalidate = 120;
 
 export default async function MoversPage() {
-  const [gainers, losers] = await Promise.all([
-    getTopGainers(20),
-    getTopLosers(20),
-  ]);
+  const { gainers, losers } = await getMarketMovers(20);
 
   return (
     <>

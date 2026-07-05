@@ -2,10 +2,17 @@ import { Newspaper } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MarketSummary } from "@/lib/market-summary";
+import { cn } from "@/lib/utils";
 
-export function MarketSummaryCard({ data }: { data: MarketSummary }) {
+export function MarketSummaryCard({
+  data,
+  className,
+}: {
+  data: MarketSummary;
+  className?: string;
+}) {
   return (
-    <Card className="relative overflow-hidden">
+    <Card className={cn("relative overflow-hidden", className)}>
       <div className="grid-bg pointer-events-none absolute inset-0 opacity-30" />
       <div className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full bg-primary/10 blur-3xl" />
       <CardHeader className="relative flex flex-row items-center gap-2">
@@ -16,11 +23,11 @@ export function MarketSummaryCard({ data }: { data: MarketSummary }) {
           Market Brief
         </CardTitle>
       </CardHeader>
-      <CardContent className="relative space-y-4">
+      <CardContent className="relative flex flex-1 flex-col space-y-4">
         <p className="text-sm leading-relaxed text-muted-foreground">
           {data.summary}
         </p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid flex-1 grid-cols-2 content-start gap-2">
           {data.highlights.map((item) => (
             <div
               key={item.label}
@@ -33,7 +40,7 @@ export function MarketSummaryCard({ data }: { data: MarketSummary }) {
             </div>
           ))}
         </div>
-        <p className="text-[0.7rem] text-muted-foreground">
+        <p className="mt-auto text-[0.7rem] text-muted-foreground">
           CoinGecko · GeckoTerminal ·{" "}
           {new Date(data.generatedAt).toLocaleString()}
         </p>

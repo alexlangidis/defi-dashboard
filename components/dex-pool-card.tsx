@@ -70,8 +70,8 @@ export function DexPoolCard({
             >
               {pool.name}
             </Link>
-            <p className="flex items-center gap-1.5 truncate text-xs capitalize text-muted-foreground">
-              <span className="inline-flex min-w-0 items-center gap-1 truncate">
+            <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs capitalize text-muted-foreground">
+              <span className="inline-flex min-w-0 max-w-full items-center gap-1">
                 <DexIcon
                   dexId={pool.dexId}
                   name={pool.dex}
@@ -80,8 +80,10 @@ export function DexPoolCard({
                 />
                 <span className="truncate">{pool.dex}</span>
               </span>
-              <span aria-hidden>·</span>
-              <span className="inline-flex min-w-0 items-center gap-1">
+              <span aria-hidden className="hidden sm:inline">
+                ·
+              </span>
+              <span className="inline-flex min-w-0 max-w-full items-center gap-1">
                 <NetworkIcon
                   networkId={pool.network}
                   name={pool.networkName}
