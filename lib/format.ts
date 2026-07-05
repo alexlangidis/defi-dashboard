@@ -1,10 +1,56 @@
+const SUBSCRIPT_DIGITS = "₀₁₂₃₄₅₆₇₈₉";
+
+function toSubscript(count: number) {
+  return String(count)
+    .split("")
+    .map((digit) => SUBSCRIPT_DIGITS[Number(digit)])
+    .join("");
+}
+
+/** e.g. 0.00000123 -> $0.0₅123 */
+export function formatSmallUsd(value: number) {
+  const sign = value < 0 ? "-" : "";
+  const abs = Math.abs(value);
+
+  if (abs === 0) return "$0.00";
+
+  const exponent = Math.floor(Math.log10(abs));
+  const zeroCount = -exponent - 1;
+  const mantissa = abs / 10 ** exponent;
+  const digits = mantissa
+    .toPrecision(4)
+    .replace(".", "")
+    .replace(/0+$/, "")
+    .slice(0, 4);
+
+  return `${sign}$0.0${toSubscript(zeroCount)}${digits}`;
+}
+
 export function formatUsd(value: number | null | undefined, compact = false) {
   if (value == null || Number.isNaN(value)) return "—";
+
+  const abs = Math.abs(value);
+
+  if (compact && abs >= 1000) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      notation: "compact",
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+
+  if (abs === 0) return "$0.00";
+
+  if (abs < 0.01) {
+    return formatSmallUsd(value);
+  }
+
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    notation: compact ? "compact" : "standard",
-    maximumFractionDigits: compact ? 2 : 2,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: abs >= 1 ? 2 : 6,
   }).format(value);
 }
 
