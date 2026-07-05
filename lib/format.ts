@@ -8,6 +8,16 @@ export function formatUsd(value: number | null | undefined, compact = false) {
   }).format(value);
 }
 
+/** CoinGecko trending returns values like "$125,727,166" */
+export function parseTrendingUsd(
+  value: string | number | null | undefined,
+): number | null {
+  if (value == null) return null;
+  if (typeof value === "number") return Number.isNaN(value) ? null : value;
+  const parsed = Number(value.replace(/[^0-9.-]/g, ""));
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 export function formatPercent(value: number | null | undefined) {
   if (value == null || Number.isNaN(value)) return "—";
   const sign = value > 0 ? "+" : "";

@@ -231,3 +231,18 @@ export const getGlobalMarketCapChart = cache(async (days = 7) => {
   }>(`/global/market_cap_chart?days=${days}`, 120);
   return data?.market_cap_chart.market_cap ?? [];
 });
+
+export type AssetPlatform = {
+  id: string;
+  name: string;
+  image: {
+    thumb: string;
+    small: string;
+    large: string;
+  };
+};
+
+export const getAssetPlatforms = cache(async () => {
+  const data = await fetchCoinGecko<AssetPlatform[]>("/asset_platforms", 3600);
+  return data ?? [];
+});

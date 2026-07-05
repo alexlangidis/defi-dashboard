@@ -2,11 +2,15 @@ import Link from "next/link";
 import { ExternalLink, Flame } from "lucide-react";
 
 import { BuySellBar } from "@/components/buy-sell-bar";
+import { DexIcon } from "@/components/dex-icon";
+import { NetworkIcon } from "@/components/network-icon";
 import { PercentBadge } from "@/components/percent-badge";
+import { PoolTokenIcons } from "@/components/pool-token-icons";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { DexPool } from "@/lib/api/geckoterminal";
 import { formatUsd } from "@/lib/format";
+import { poolDetailPath } from "@/lib/pool-path";
 import { cn } from "@/lib/utils";
 
 export function DexPoolCard({
@@ -52,15 +56,42 @@ export function DexPoolCard({
               {rank}
             </span>
           ) : null}
+          <PoolTokenIcons
+            baseToken={pool.baseToken}
+            quoteToken={pool.quoteToken}
+            network={pool.network}
+            size={32}
+            className="mt-0.5"
+          />
           <div className="min-w-0 flex-1 pr-16">
             <Link
-              href={`/dex/${pool.network}/${pool.address}`}
+              href={poolDetailPath(pool.network, pool.address)}
               className="truncate font-medium tracking-tight hover:underline"
             >
               {pool.name}
             </Link>
-            <p className="truncate text-xs capitalize text-muted-foreground">
-              {pool.dex} · {pool.network}
+            <p className="flex items-center gap-1.5 truncate text-xs capitalize text-muted-foreground">
+              <span className="inline-flex min-w-0 items-center gap-1 truncate">
+                <DexIcon
+                  dexId={pool.dexId}
+                  name={pool.dex}
+                  imageUrl={pool.dexImageUrl}
+                  size={14}
+                />
+                <span className="truncate">{pool.dex}</span>
+              </span>
+              <span aria-hidden>·</span>
+              <span className="inline-flex min-w-0 items-center gap-1">
+                <NetworkIcon
+                  networkId={pool.network}
+                  name={pool.networkName}
+                  imageUrl={pool.networkImageUrl}
+                  size={14}
+                />
+                <span className="truncate">
+                  {pool.networkName ?? pool.network}
+                </span>
+              </span>
             </p>
           </div>
         </div>
@@ -91,7 +122,7 @@ export function DexPoolCard({
         <BuySellBar buys={pool.buys24h} sells={pool.sells24h} />
         <div className="flex items-center gap-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <Link
-            href={`/dex/${pool.network}/${pool.address}`}
+            href={poolDetailPath(pool.network, pool.address)}
             className="text-xs text-primary hover:underline"
           >
             View details

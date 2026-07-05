@@ -1,15 +1,19 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 
 import { AreaChart } from "@/components/area-chart";
 import { BuySellBar } from "@/components/buy-sell-bar";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
+import { DexIcon } from "@/components/dex-icon";
+import { NetworkIcon } from "@/components/network-icon";
 import { PercentBadge } from "@/components/percent-badge";
+import { PoolUnavailable } from "@/components/pool-unavailable";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPoolByAddress, getPoolOhlcv } from "@/lib/api/geckoterminal";
+import { enrichDexPool, getNetworkIconLookup } from "@/lib/network-icons";
+import { normalizePoolAddress } from "@/lib/pool-path";
 import { formatUsd } from "@/lib/format";
 
 export const revalidate = 300;
@@ -19,14 +23,20 @@ export default async function DexPoolDetailPage({
 }: {
   params: Promise<{ network: string; address: string }>;
 }) {
-  const { network, address } = await params;
+  const { network, address: rawAddress } = await params;
+  const address = normalizePoolAddress(rawAddress);
 
-  const [pool, ohlcv] = await Promise.all([
-    getPoolByAddress(network, address),
+  const poolRaw = await getPoolByAddress(network, address);
+  if (!poolRaw) {
+    return <PoolUnavailable network={network} address={address} />;
+  }
+
+  const [ohlcv, networkIcons] = await Promise.all([
     getPoolOhlcv(network, address, "hour", 48),
+    getNetworkIconLookup(),
   ]);
 
-  if (!pool) notFound();
+  const pool = enrichDexPool(poolRaw, networkIcons);
 
   const chart = ohlcv.map((c) => ({ x: c.time * 1000, y: c.close }));
   const positive = pool.priceChange24h >= 0;
@@ -35,7 +45,25 @@ export default async function DexPoolDetailPage({
     <>
       <DashboardHeader
         title={pool.name}
-        description={`${pool.dex} · ${pool.network}`}
+        description={
+          <span className="inline-flex items-center gap-1.5">
+            <DexIcon
+              dexId={pool.dexId}
+              name={pool.dex}
+              imageUrl={pool.dexImageUrl}
+              size={16}
+            />
+            <span className="capitalize">{pool.dex}</span>
+            <span>on</span>
+            <NetworkIcon
+              networkId={pool.network}
+              name={pool.networkName}
+              imageUrl={pool.networkImageUrl}
+              size={16}
+            />
+            <span>{pool.networkName ?? pool.network}</span>
+          </span>
+        }
       />
       <main className="flex-1 space-y-6 p-4 md:p-8">
         <FadeIn>
@@ -47,8 +75,22 @@ export default async function DexPoolDetailPage({
             />
             <div className="relative flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {pool.dex} on {pool.network}
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground capitalize">
+                  <DexIcon
+                    dexId={pool.dexId}
+                    name={pool.dex}
+                    imageUrl={pool.dexImageUrl}
+                    size={16}
+                  />
+                  <span>{pool.dex}</span>
+                  <span>on</span>
+                  <NetworkIcon
+                    networkId={pool.network}
+                    name={pool.networkName}
+                    imageUrl={pool.networkImageUrl}
+                    size={16}
+                  />
+                  <span>{pool.networkName ?? pool.network}</span>
                 </p>
                 <div className="mt-2 flex items-center gap-3">
                   <PercentBadge value={pool.priceChange24h} />

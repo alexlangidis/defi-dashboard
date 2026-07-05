@@ -7,6 +7,7 @@ type CoinImageProps = {
   alt: string;
   size?: number;
   className?: string;
+  onError?: () => void;
 };
 
 export function CoinImage({
@@ -14,6 +15,7 @@ export function CoinImage({
   alt,
   size = 28,
   className,
+  onError,
 }: CoinImageProps) {
   return (
     <Image
@@ -23,6 +25,7 @@ export function CoinImage({
       height={size}
       className={cn("shrink-0 rounded-full object-cover", className)}
       style={{ width: size, height: size }}
+      onError={onError}
     />
   );
 }

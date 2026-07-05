@@ -16,11 +16,13 @@ const columns: ColumnDef<MarketCoin>[] = [
   {
     accessorKey: "market_cap_rank",
     header: "#",
+    meta: { headerClassName: "pl-4 w-12", cellClassName: "pl-4 tabular-nums" },
     cell: ({ row }) => row.original.market_cap_rank,
   },
   {
-    accessorKey: "name",
+    id: "token",
     header: "Token",
+    accessorFn: (row) => `${row.name} ${row.symbol}`,
     cell: ({ row }) => (
       <div className="flex items-center gap-3">
         <CoinImage
@@ -45,6 +47,7 @@ const columns: ColumnDef<MarketCoin>[] = [
   {
     id: "sparkline",
     header: "7d",
+    enableSorting: false,
     cell: ({ row }) => {
       const prices = row.original.sparkline_in_7d?.price;
       if (!prices?.length) return "—";
@@ -73,11 +76,13 @@ const columns: ColumnDef<MarketCoin>[] = [
   {
     accessorKey: "market_cap",
     header: "Market Cap",
+    meta: { headerClassName: "pr-4", cellClassName: "pr-4" },
     cell: ({ row }) => formatUsd(row.original.market_cap, true),
   },
   {
     id: "actions",
     header: "",
+    enableSorting: false,
     cell: ({ row }) => (
       <WatchlistButton
         coinId={row.original.id}
@@ -90,5 +95,13 @@ const columns: ColumnDef<MarketCoin>[] = [
 ];
 
 export function MarketTable({ data }: { data: MarketCoin[] }) {
-  return <DataTable columns={columns} data={data} />;
+  return (
+    <DataTable
+      columns={columns}
+      data={data}
+      enableFilter
+      filterPlaceholder="Filter tokens…"
+      getFilterText={(row) => `${row.name} ${row.symbol}`}
+    />
+  );
 }

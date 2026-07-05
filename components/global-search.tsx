@@ -16,6 +16,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { formatUsd } from "@/lib/format";
+import { poolDetailPath } from "@/lib/pool-path";
 import { useSearchHistoryStore } from "@/stores/search-history-store";
 
 type SearchResult = {
@@ -177,14 +178,15 @@ export function GlobalSearch() {
                 <CommandItem
                   key={pool.id}
                   value={`${pool.name} ${pool.network}`}
-                  onSelect={() =>
-                    go(`/dex/${pool.network}/${pool.address}`, {
+                  onSelect={() => {
+                    const href = poolDetailPath(pool.network, pool.address);
+                    go(href, {
                       type: "pool",
                       id: pool.id,
                       label: pool.name,
-                      href: `/dex/${pool.network}/${pool.address}`,
-                    })
-                  }
+                      href,
+                    });
+                  }}
                 >
                   <span className="font-medium">{pool.name}</span>
                   <span className="text-xs uppercase text-muted-foreground">

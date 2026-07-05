@@ -10,6 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEX_NETWORKS } from "@/lib/constants/navigation";
 import {
+  enrichDexPools,
+  getNetworkIconLookup,
+} from "@/lib/network-icons";
+import {
   getNetworks,
   getTrendingDexPools,
   getTrendingDexPoolsByNetwork,
@@ -25,17 +29,23 @@ export default async function DexPage({
   const { network } = await searchParams;
   const useNetwork = network && network !== "all";
 
-  const [trending, networks] = await Promise.all([
+  const [trendingRaw, networks, networkIcons] = await Promise.all([
     useNetwork
       ? getTrendingDexPoolsByNetwork(network)
       : getTrendingDexPools(),
     getNetworks(),
+    getNetworkIconLookup(),
   ]);
 
-  const networkOptions =
+  const trending = enrichDexPools(trendingRaw, networkIcons);
+
+  const allNetworks =
     networks.length > 0
-      ? [{ id: "all", label: "All" }, ...networks.map((n) => ({ id: n.id, label: n.name }))]
-      : [...DEX_NETWORKS];
+      ? networks.map((n) => ({ id: n.id, label: n.name }))
+      : DEX_NETWORKS.filter((n) => n.id !== "all").map((n) => ({
+          id: n.id,
+          label: n.label,
+        }));
 
   return (
     <>
@@ -45,7 +55,10 @@ export default async function DexPage({
       />
       <main className="flex-1 space-y-6 p-4 md:p-8">
         <Suspense fallback={<Skeleton className="h-8 w-full max-w-xl" />}>
-          <NetworkFilter networks={networkOptions} />
+          <NetworkFilter
+            allNetworks={allNetworks}
+            networkImageById={networkIcons.imageByNetworkId}
+          />
         </Suspense>
 
         <Tabs defaultValue="cards">

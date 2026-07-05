@@ -1,9 +1,14 @@
 import { getTrendingDexPools } from "@/lib/api/geckoterminal";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { DexPoolCard } from "@/components/dex-pool-card";
+import { enrichDexPools, getNetworkIconLookup } from "@/lib/network-icons";
 
 export async function DashboardDexSection() {
-  const dexPools = await getTrendingDexPools();
+  const [dexPoolsRaw, networkIcons] = await Promise.all([
+    getTrendingDexPools(),
+    getNetworkIconLookup(),
+  ]);
+  const dexPools = enrichDexPools(dexPoolsRaw, networkIcons);
 
   return (
     <FadeIn delay={0.1} className="space-y-4 xl:col-span-2">

@@ -18,8 +18,9 @@ export function WatchlistTable({ data }: { data: MarketCoin[] }) {
 
   const columns: ColumnDef<MarketCoin>[] = [
     {
-      accessorKey: "name",
+      id: "token",
       header: "Token",
+      accessorFn: (row) => `${row.name} ${row.symbol}`,
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <CoinImage src={row.original.image} alt={row.original.name} size={28} />
@@ -40,6 +41,7 @@ export function WatchlistTable({ data }: { data: MarketCoin[] }) {
     {
       id: "sparkline",
       header: "7d",
+      enableSorting: false,
       cell: ({ row }) => {
         const prices = row.original.sparkline_in_7d?.price;
         if (!prices?.length) return "—";
@@ -73,6 +75,7 @@ export function WatchlistTable({ data }: { data: MarketCoin[] }) {
     {
       id: "actions",
       header: "",
+      enableSorting: false,
       cell: ({ row }) => (
         <Button
           variant="ghost"
@@ -86,5 +89,13 @@ export function WatchlistTable({ data }: { data: MarketCoin[] }) {
     },
   ];
 
-  return <DataTable columns={columns} data={data} />;
+  return (
+    <DataTable
+      columns={columns}
+      data={data}
+      enableFilter
+      filterPlaceholder="Filter watchlist…"
+      getFilterText={(row) => `${row.name} ${row.symbol}`}
+    />
+  );
 }
