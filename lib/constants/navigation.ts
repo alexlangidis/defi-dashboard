@@ -1,5 +1,6 @@
 import {
   ArrowUpDown,
+  GitCompare,
   Home,
   Newspaper,
   Star,
@@ -12,6 +13,7 @@ export const NAV_ITEMS = [
   { title: "Movers", href: "/movers", icon: ArrowUpDown },
   { title: "Trending", href: "/trending", icon: TrendingUp },
   { title: "DEX Pools", href: "/dex", icon: Waves },
+  { title: "Compare", href: "/compare", icon: GitCompare },
   { title: "Watchlist", href: "/watchlist", icon: Star },
   { title: "Market Brief", href: "/market-brief", icon: Newspaper },
 ] as const;

@@ -1,6 +1,7 @@
 "use client";
 
 import { GlobalSearch } from "@/components/global-search";
+import { RefreshButton } from "@/components/refresh-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -23,6 +24,7 @@ export function DashboardHeader({
         ) : null}
       </div>
       <div className="flex items-center gap-1">
+        <RefreshButton />
         <ThemeToggle />
         <GlobalSearch />
       </div>

@@ -2,6 +2,8 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { MarketSummaryCard } from "@/components/market-summary-card";
 import { buildMarketSummary } from "@/lib/market-summary";
 
+export const revalidate = 120;
+
 export default async function MarketBriefPage() {
   const summary = await buildMarketSummary();
 

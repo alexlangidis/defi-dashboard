@@ -7,7 +7,11 @@ import { DEX_NETWORKS } from "@/lib/constants/navigation";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { cn } from "@/lib/utils";
 
-export function NetworkFilter() {
+export function NetworkFilter({
+  networks = [...DEX_NETWORKS],
+}: {
+  networks?: Array<{ id: string; label: string }>;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const active = searchParams.get("network") ?? "all";
@@ -19,7 +23,7 @@ export function NetworkFilter() {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {DEX_NETWORKS.map((network) => {
+      {networks.map((network) => {
         const isActive = active === network.id;
         return (
           <button

@@ -53,7 +53,12 @@ export function DexPoolCard({
             </span>
           ) : null}
           <div className="min-w-0 flex-1 pr-16">
-            <p className="truncate font-medium tracking-tight">{pool.name}</p>
+            <Link
+              href={`/dex/${pool.network}/${pool.address}`}
+              className="truncate font-medium tracking-tight hover:underline"
+            >
+              {pool.name}
+            </Link>
             <p className="truncate text-xs capitalize text-muted-foreground">
               {pool.dex} · {pool.network}
             </p>
@@ -84,15 +89,23 @@ export function DexPoolCard({
           <PercentBadge value={pool.priceChange24h} />
         </div>
         <BuySellBar buys={pool.buys24h} sells={pool.sells24h} />
-        <Link
-          href={pool.geckoTerminalUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-        >
-          Open on GeckoTerminal
-          <ExternalLink className="size-3" />
-        </Link>
+        <div className="flex items-center gap-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <Link
+            href={`/dex/${pool.network}/${pool.address}`}
+            className="text-xs text-primary hover:underline"
+          >
+            View details
+          </Link>
+          <Link
+            href={pool.geckoTerminalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+          >
+            GeckoTerminal
+            <ExternalLink className="size-3" />
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );

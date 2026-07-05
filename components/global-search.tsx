@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { CoinImage } from "@/components/coin-image";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Search } from "lucide-react";
+import { Clock, ExternalLink, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +16,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { formatUsd } from "@/lib/format";
+import { useSearchHistoryStore } from "@/stores/search-history-store";
 
 type SearchResult = {
   coins: Array<{
@@ -30,6 +30,7 @@ type SearchResult = {
     id: string;
     name: string;
     network: string;
+    address: string;
     volume24h: number;
     geckoTerminalUrl: string;
   }>;
@@ -41,6 +42,8 @@ export function GlobalSearch() {
   const [results, setResults] = useState<SearchResult>({ coins: [], pools: [] });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const history = useSearchHistoryStore((s) => s.items);
+  const addHistory = useSearchHistoryStore((s) => s.add);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -72,7 +75,8 @@ export function GlobalSearch() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  function go(path: string) {
+  function go(path: string, historyItem?: Parameters<typeof addHistory>[0]) {
+    if (historyItem) addHistory(historyItem);
     setOpen(false);
     setQuery("");
     router.push(path);
@@ -104,33 +108,53 @@ export function GlobalSearch() {
 
       <CommandDialog
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) setQuery("");
+        }}
         commandProps={{
           shouldFilter: false,
-          value: query,
-          onValueChange: setQuery,
         }}
       >
-        <CommandInput placeholder="Search tokens or DEX pools…" />
+        <CommandInput
+          placeholder="Search tokens or DEX pools…"
+          value={query}
+          onValueChange={setQuery}
+        />
         <CommandList>
           <CommandEmpty>
             {loading ? "Searching…" : "No results found."}
           </CommandEmpty>
+          {!query.trim() && history.length > 0 ? (
+            <CommandGroup heading="Recent">
+              {history.map((item) => (
+                <CommandItem
+                  key={`${item.type}-${item.id}`}
+                  value={item.label}
+                  onSelect={() => go(item.href, item)}
+                >
+                  <Clock className="size-3.5 text-muted-foreground" />
+                  <span>{item.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : null}
           {results.coins.length > 0 ? (
             <CommandGroup heading="Tokens">
               {results.coins.map((coin) => (
                 <CommandItem
                   key={coin.id}
                   value={`${coin.name} ${coin.symbol}`}
-                  onSelect={() => go(`/tokens/${coin.id}`)}
+                  onSelect={() =>
+                    go(`/tokens/${coin.id}`, {
+                      type: "token",
+                      id: coin.id,
+                      label: coin.name,
+                      href: `/tokens/${coin.id}`,
+                    })
+                  }
                 >
-                  <Image
-                    src={coin.thumb}
-                    alt=""
-                    width={20}
-                    height={20}
-                    className="rounded-full"
-                  />
+                  <CoinImage src={coin.thumb} alt="" size={20} />
                   <span>{coin.name}</span>
                   <span className="text-xs uppercase text-muted-foreground">
                     {coin.symbol}
@@ -153,7 +177,14 @@ export function GlobalSearch() {
                 <CommandItem
                   key={pool.id}
                   value={`${pool.name} ${pool.network}`}
-                  onSelect={() => window.open(pool.geckoTerminalUrl, "_blank")}
+                  onSelect={() =>
+                    go(`/dex/${pool.network}/${pool.address}`, {
+                      type: "pool",
+                      id: pool.id,
+                      label: pool.name,
+                      href: `/dex/${pool.network}/${pool.address}`,
+                    })
+                  }
                 >
                   <span className="font-medium">{pool.name}</span>
                   <span className="text-xs uppercase text-muted-foreground">

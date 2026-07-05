@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 type CoinGeckoConfig = {
   baseUrl: string;
   apiKey: string | null;
@@ -40,12 +42,22 @@ function getHeaders(): HeadersInit {
   return headers;
 }
 
-async function fetchCoinGecko<T>(path: string, revalidate = 60): Promise<T> {
+async function fetchCoinGecko<T>(
+  path: string,
+  revalidate = 60,
+): Promise<T | null> {
   const { baseUrl } = getCoinGeckoConfig();
   const res = await fetch(`${baseUrl}${path}`, {
     headers: getHeaders(),
     next: { revalidate },
   });
+
+  if (res.status === 429 || res.status === 503 || res.status === 401) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(`CoinGecko request failed (${res.status}): ${path}`);
+    }
+    return null;
+  }
 
   if (!res.ok) {
     throw new Error(`CoinGecko API error: ${res.status} ${res.statusText}`);
@@ -96,6 +108,7 @@ export type CoinDetail = {
   name: string;
   image: { large: string; small: string; thumb: string };
   market_cap_rank: number;
+  categories?: string[];
   market_data: {
     current_price: { usd: number };
     market_cap: { usd: number };
@@ -104,12 +117,18 @@ export type CoinDetail = {
     price_change_percentage_7d: number;
     price_change_percentage_30d: number;
     ath: { usd: number };
+    ath_date: { usd: string };
     atl: { usd: number };
     circulating_supply: number;
     total_supply: number;
   };
   description: { en: string };
-  links: { homepage: string[] };
+  links: {
+    homepage: string[];
+    blockchain_site: string[];
+    twitter_screen_name?: string;
+    subreddit_url?: string;
+  };
 };
 
 export type GlobalData = {
@@ -123,39 +142,45 @@ export type GlobalData = {
   };
 };
 
-export async function getTrendingCoins() {
+export const getTrendingCoins = cache(async () => {
   const data = await fetchCoinGecko<{ coins: TrendingCoin[] }>(
     "/search/trending",
     120,
   );
-  return data.coins;
-}
+  return data?.coins ?? [];
+});
 
-export async function getMarketCoins(perPage = 20) {
-  return fetchCoinGecko<MarketCoin[]>(
+export const getMarketCoins = cache(async (perPage = 20) => {
+  const data = await fetchCoinGecko<MarketCoin[]>(
     `/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=1&sparkline=true&price_change_percentage=7d`,
     60,
   );
-}
+  return data ?? [];
+});
 
 export async function getCoinDetail(id: string) {
-  return fetchCoinGecko<CoinDetail>(
+  const data = await fetchCoinGecko<CoinDetail>(
     `/coins/${id}?localization=false&tickers=false&community_data=false&developer_data=false`,
     60,
   );
+  if (!data) {
+    throw new Error("CoinGecko API unavailable");
+  }
+  return data;
 }
 
-export async function getGlobalData() {
+export const getGlobalData = cache(async () => {
   return fetchCoinGecko<GlobalData>("/global", 120);
-}
+});
 
-export async function getCoinsByIds(ids: string[]) {
+export const getCoinsByIds = cache(async (ids: string[]) => {
   if (ids.length === 0) return [];
-  return fetchCoinGecko<MarketCoin[]>(
+  const data = await fetchCoinGecko<MarketCoin[]>(
     `/coins/markets?vs_currency=usd&ids=${ids.join(",")}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`,
     30,
   );
-}
+  return data ?? [];
+});
 
 export type SearchCoin = {
   id: string;
@@ -171,22 +196,24 @@ export async function searchCoins(query: string) {
     `/search?query=${encodeURIComponent(query)}`,
     300,
   );
-  return data.coins.slice(0, 8);
+  return data?.coins?.slice(0, 8) ?? [];
 }
 
-export async function getTopGainers(perPage = 10) {
-  return fetchCoinGecko<MarketCoin[]>(
+export const getTopGainers = cache(async (perPage = 20) => {
+  const data = await fetchCoinGecko<MarketCoin[]>(
     `/coins/markets?vs_currency=usd&order=price_change_percentage_24h_desc&per_page=${perPage}&page=1&sparkline=true&price_change_percentage=7d`,
     60,
   );
-}
+  return data ?? [];
+});
 
-export async function getTopLosers(perPage = 10) {
-  return fetchCoinGecko<MarketCoin[]>(
+export const getTopLosers = cache(async (perPage = 20) => {
+  const data = await fetchCoinGecko<MarketCoin[]>(
     `/coins/markets?vs_currency=usd&order=price_change_percentage_24h_asc&per_page=${perPage}&page=1&sparkline=true&price_change_percentage=7d`,
     60,
   );
-}
+  return data ?? [];
+});
 
 export type MarketChartPoint = [number, number];
 
@@ -195,5 +222,12 @@ export async function getCoinMarketChart(id: string, days = 7) {
     `/coins/${id}/market_chart?vs_currency=usd&days=${days}`,
     120,
   );
-  return data.prices;
+  return data?.prices ?? [];
 }
+
+export const getGlobalMarketCapChart = cache(async (days = 7) => {
+  const data = await fetchCoinGecko<{
+    market_cap_chart: { market_cap: MarketChartPoint[] };
+  }>(`/global/market_cap_chart?days=${days}`, 120);
+  return data?.market_cap_chart.market_cap ?? [];
+});

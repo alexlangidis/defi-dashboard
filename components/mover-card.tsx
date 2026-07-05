@@ -1,5 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
+
+import { CoinImage } from "@/components/coin-image";
 
 import { PercentBadge } from "@/components/percent-badge";
 import { Sparkline } from "@/components/sparkline";
@@ -35,12 +36,11 @@ export function MoverCard({
           )}
         />
         <CardContent className="flex items-center gap-3 p-4">
-          <Image
+          <CoinImage
             src={coin.image}
             alt={coin.name}
-            width={36}
-            height={36}
-            className="rounded-full ring-1 ring-foreground/10"
+            size={36}
+            className="ring-1 ring-foreground/10"
           />
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium tracking-tight">{coin.name}</p>

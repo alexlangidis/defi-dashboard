@@ -60,15 +60,22 @@ const columns: ColumnDef<DexPool>[] = [
     id: "link",
     header: "",
     cell: ({ row }) => (
-      <Link
-        href={row.original.geckoTerminalUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-      >
-        View
-        <ExternalLink className="size-3" />
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link
+          href={`/dex/${row.original.network}/${row.original.address}`}
+          className="text-sm text-primary hover:underline"
+        >
+          Details
+        </Link>
+        <Link
+          href={row.original.geckoTerminalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+        >
+          <ExternalLink className="size-3" />
+        </Link>
+      </div>
     ),
   },
 ];

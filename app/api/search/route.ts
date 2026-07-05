@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   }
 
   const [coins, pools] = await Promise.all([
-    searchCoins(q),
+    searchCoins(q).catch(() => []),
     searchPools(q).catch(() => []),
   ]);
 
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
       id: p.id,
       name: p.name,
       network: p.network,
+      address: p.address,
       volume24h: p.volume24h,
       geckoTerminalUrl: p.geckoTerminalUrl,
     })),

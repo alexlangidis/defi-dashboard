@@ -1,8 +1,9 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 import Link from "next/link";
+
+import { CoinImage } from "@/components/coin-image";
 
 import { DataTable } from "@/components/data-table";
 import { PercentBadge } from "@/components/percent-badge";
@@ -22,12 +23,10 @@ const columns: ColumnDef<MarketCoin>[] = [
     header: "Token",
     cell: ({ row }) => (
       <div className="flex items-center gap-3">
-        <Image
+        <CoinImage
           src={row.original.image}
           alt={row.original.name}
-          width={28}
-          height={28}
-          className="rounded-full"
+          size={28}
         />
         <div>
           <Link

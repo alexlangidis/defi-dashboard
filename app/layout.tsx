@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ThemeProvider } from "@wrksz/themes/next";
 
 import { Providers } from "@/components/providers";
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     "Premium DeFi dashboard with live market data, DEX pools, gainers, losers, and watchlist from CoinGecko and GeckoTerminal.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -21,7 +22,14 @@ export default function RootLayout({
         className="min-h-full bg-background text-foreground"
         suppressHydrationWarning
       >
-        <Providers>{children}</Providers>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers>{children}</Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

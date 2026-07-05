@@ -2,6 +2,8 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { TrendingTable } from "@/components/tables/trending-table";
 import { getTrendingCoins } from "@/lib/api/coingecko";
 
+export const revalidate = 120;
+
 export default async function TrendingPage() {
   const trending = await getTrendingCoins();
 

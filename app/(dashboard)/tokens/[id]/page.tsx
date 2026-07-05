@@ -1,5 +1,8 @@
-import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ExternalLink, Globe } from "lucide-react";
+
+import { CoinImage } from "@/components/coin-image";
 
 import { AreaChart } from "@/components/area-chart";
 import { DashboardHeader } from "@/components/dashboard-header";
@@ -10,6 +13,14 @@ import { WatchlistButton } from "@/components/watchlist-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCoinDetail, getCoinMarketChart } from "@/lib/api/coingecko";
 import { formatNumber, formatUsd } from "@/lib/format";
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 export default async function TokenDetailPage({
   params,
@@ -50,12 +61,11 @@ export default async function TokenDetailPage({
             />
             <div className="relative flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <Image
+                <CoinImage
                   src={coin.image.large}
                   alt={coin.name}
-                  width={56}
-                  height={56}
-                  className="rounded-full ring-2 ring-foreground/10"
+                  size={56}
+                  className="ring-2 ring-foreground/10"
                 />
                 <div>
                   <p className="text-3xl font-semibold tracking-tight tabular-nums md:text-4xl">
@@ -130,6 +140,12 @@ export default async function TokenDetailPage({
             <StatCard title="ATH" value={formatUsd(md.ath.usd)} />
           </StaggerItem>
           <StaggerItem>
+            <StatCard
+              title="ATH Date"
+              value={md.ath_date?.usd ? formatDate(md.ath_date.usd) : "—"}
+            />
+          </StaggerItem>
+          <StaggerItem>
             <StatCard title="From ATH" value={`${athDistance.toFixed(1)}%`} />
           </StaggerItem>
           <StaggerItem>
@@ -139,6 +155,79 @@ export default async function TokenDetailPage({
             <StatCard title="Total Supply" value={formatNumber(md.total_supply)} />
           </StaggerItem>
         </StaggerContainer>
+
+        {coin.categories && coin.categories.length > 0 ? (
+          <FadeIn delay={0.08}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium tracking-tight">
+                  Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                {coin.categories.map((cat) => (
+                  <span
+                    key={cat}
+                    className="rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs capitalize"
+                  >
+                    {cat}
+                  </span>
+                ))}
+              </CardContent>
+            </Card>
+          </FadeIn>
+        ) : null}
+
+        {(coin.links.homepage[0] ||
+          coin.links.blockchain_site[0] ||
+          coin.links.twitter_screen_name) ? (
+          <FadeIn delay={0.09}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium tracking-tight">
+                  Links
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-3">
+                {coin.links.homepage.filter(Boolean).map((url) => (
+                  <Link
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                  >
+                    <Globe className="size-3.5" />
+                    Website
+                    <ExternalLink className="size-3" />
+                  </Link>
+                ))}
+                {coin.links.blockchain_site.filter(Boolean)[0] ? (
+                  <Link
+                    href={coin.links.blockchain_site.filter(Boolean)[0]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                  >
+                    Explorer
+                    <ExternalLink className="size-3" />
+                  </Link>
+                ) : null}
+                {coin.links.twitter_screen_name ? (
+                  <Link
+                    href={`https://twitter.com/${coin.links.twitter_screen_name}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                  >
+                    Twitter
+                    <ExternalLink className="size-3" />
+                  </Link>
+                ) : null}
+              </CardContent>
+            </Card>
+          </FadeIn>
+        ) : null}
 
         {coin.description.en ? (
           <FadeIn delay={0.1}>

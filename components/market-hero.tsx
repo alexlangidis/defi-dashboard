@@ -1,3 +1,4 @@
+import { AreaChart } from "@/components/area-chart";
 import { formatPercent, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -7,12 +8,14 @@ export function MarketHero({
   volume,
   btcDominance,
   ethDominance,
+  capChart = [],
 }: {
   marketCap: number;
   marketCapChange: number;
   volume: number;
   btcDominance: number;
   ethDominance: number;
+  capChart?: Array<{ x: number; y: number }>;
 }) {
   const positive = marketCapChange >= 0;
   const rest = Math.max(0, 100 - btcDominance - ethDominance);
@@ -55,6 +58,11 @@ export function MarketHero({
               {formatUsd(volume, true)}
             </span>
           </p>
+          {capChart.length > 0 ? (
+            <div className="h-16 w-full max-w-md pt-2">
+              <AreaChart data={capChart} />
+            </div>
+          ) : null}
         </div>
 
         <div className="w-full max-w-sm space-y-3">

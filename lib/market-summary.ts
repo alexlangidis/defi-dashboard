@@ -1,4 +1,6 @@
+import type { GlobalData, MarketCoin } from "@/lib/api/coingecko";
 import { getGlobalData, getMarketCoins } from "@/lib/api/coingecko";
+import type { DexPool } from "@/lib/api/geckoterminal";
 import { getTrendingDexPools } from "@/lib/api/geckoterminal";
 import { formatPercent, formatUsd } from "@/lib/format";
 
@@ -8,12 +10,30 @@ export type MarketSummary = {
   highlights: Array<{ label: string; value: string }>;
 };
 
-export async function buildMarketSummary(): Promise<MarketSummary> {
-  const [globalData, topCoins, dexPools] = await Promise.all([
-    getGlobalData(),
-    getMarketCoins(5),
-    getTrendingDexPools(),
-  ]);
+type BuildMarketSummaryInput = {
+  globalData: GlobalData | null;
+  topCoins: MarketCoin[];
+  dexPools: DexPool[];
+};
+
+export function buildMarketSummaryFromData({
+  globalData,
+  topCoins,
+  dexPools,
+}: BuildMarketSummaryInput): MarketSummary {
+  if (!globalData) {
+    return {
+      summary:
+        "Market data is temporarily unavailable. Please try again in a few minutes.",
+      generatedAt: new Date().toISOString(),
+      highlights: [
+        { label: "Market Cap", value: "—" },
+        { label: "24h Volume", value: "—" },
+        { label: "Top DEX Pool", value: dexPools[0]?.name ?? "—" },
+        { label: "Active Coins", value: "—" },
+      ],
+    };
+  }
 
   const global = globalData.data;
   const bestPerformer = [...topCoins].sort(
@@ -62,4 +82,18 @@ export async function buildMarketSummary(): Promise<MarketSummary> {
       },
     ],
   };
+}
+
+export async function buildMarketSummary(): Promise<MarketSummary> {
+  const [globalData, topCoins, dexPools] = await Promise.all([
+    getGlobalData(),
+    getMarketCoins(10),
+    getTrendingDexPools(),
+  ]);
+
+  return buildMarketSummaryFromData({
+    globalData,
+    topCoins,
+    dexPools,
+  });
 }
