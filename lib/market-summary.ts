@@ -1,5 +1,5 @@
 import { getGlobalData, getMarketCoins } from "@/lib/api/coingecko";
-import { getChainTvls, getProtocols } from "@/lib/api/defillama";
+import { getTrendingDexPools } from "@/lib/api/geckoterminal";
 import { formatPercent, formatUsd } from "@/lib/format";
 
 export type MarketSummary = {
@@ -9,23 +9,20 @@ export type MarketSummary = {
 };
 
 export async function buildMarketSummary(): Promise<MarketSummary> {
-  const [globalData, topCoins, protocols, chains] = await Promise.all([
+  const [globalData, topCoins, dexPools] = await Promise.all([
     getGlobalData(),
     getMarketCoins(5),
-    getProtocols(),
-    getChainTvls(),
+    getTrendingDexPools(),
   ]);
 
   const global = globalData.data;
-  const totalTvl = protocols.reduce((sum, p) => sum + (p.tvl ?? 0), 0);
-  const topChain = [...chains].sort((a, b) => b.tvl - a.tvl)[0];
-  const topProtocol = [...protocols].sort((a, b) => b.tvl - a.tvl)[0];
   const bestPerformer = [...topCoins].sort(
     (a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h,
   )[0];
   const worstPerformer = [...topCoins].sort(
     (a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h,
   )[0];
+  const topDexPool = dexPools[0];
 
   const capChange = global.market_cap_change_percentage_24h_usd;
   const direction = capChange >= 0 ? "up" : "down";
@@ -33,7 +30,9 @@ export async function buildMarketSummary(): Promise<MarketSummary> {
   const summary = [
     `The global crypto market cap is ${formatUsd(global.total_market_cap.usd, true)}, ${direction} ${formatPercent(Math.abs(capChange))} over the last 24 hours.`,
     `BTC dominance sits at ${global.market_cap_percentage.btc.toFixed(1)}% and ETH at ${global.market_cap_percentage.eth.toFixed(1)}%.`,
-    `Total DeFi TVL across tracked protocols is ${formatUsd(totalTvl, true)}, led by ${topProtocol?.name ?? "—"} on ${topChain?.name ?? "—"}.`,
+    topDexPool
+      ? `On-chain, ${topDexPool.name} on ${topDexPool.network.toUpperCase()} leads DEX activity with ${formatUsd(topDexPool.volume24h, true)} in 24h volume.`
+      : "",
     bestPerformer && worstPerformer
       ? `Among top assets, ${bestPerformer.name} leads 24h gains at ${formatPercent(bestPerformer.price_change_percentage_24h)} while ${worstPerformer.name} lags at ${formatPercent(worstPerformer.price_change_percentage_24h)}.`
       : "",
@@ -54,12 +53,12 @@ export async function buildMarketSummary(): Promise<MarketSummary> {
         value: formatUsd(global.total_volume.usd, true),
       },
       {
-        label: "DeFi TVL",
-        value: formatUsd(totalTvl, true),
+        label: "Top DEX Pool",
+        value: topDexPool?.name ?? "—",
       },
       {
-        label: "Top Chain",
-        value: topChain?.name ?? "—",
+        label: "Active Coins",
+        value: global.active_cryptocurrencies.toLocaleString(),
       },
     ],
   };

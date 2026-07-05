@@ -1,23 +1,23 @@
 # DeFi Dashboard
 
-Free, open-source DeFi dashboard built with Next.js 16. Live market data from CoinGecko and DefiLlama — no API keys, auth, or database required.
+Modern DeFi dashboard built with Next.js 16. Live market data from CoinGecko and GeckoTerminal — no database required.
 
 ## Features
 
-- **Home dashboard** — market cap, volume, BTC dominance, DeFi TVL chart, market brief
+- **Dashboard** — gradient market hero, dominance bar, gainers/losers, DEX pool cards
+- **Global search** — `⌘K` to search tokens (CoinGecko) and pools (GeckoTerminal)
+- **Market movers** — top 24h gainers and losers with sparklines
 - **Trending tokens** — CoinGecko trending search
-- **Protocol TVL** — sortable DefiLlama protocol table
-- **Yield pools** — top pools by TVL with APY
-- **Stablecoins** — circulating supply across pegged assets
-- **Token detail** — price, market data, and description per coin
+- **DEX pools** — card grid, network filters, buy/sell pressure bars
+- **Token detail** — 7-day price chart, stats, watchlist
 - **Market brief** — auto-generated summary from live API data
 - **Watchlist** — saved in browser localStorage
 
 ## Stack
 
 - Next.js 16 · TypeScript · Tailwind v4 · shadcn/ui
-- TanStack Query · TanStack Table · Recharts
-- CoinGecko API (free) · DefiLlama API (free)
+- TanStack Query · TanStack Table
+- CoinGecko API · GeckoTerminal DEX API
 
 ## Getting started
 
@@ -28,17 +28,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Optional: set `COINGECKO_API_KEY` in `.env.local` for higher rate limits on the CoinGecko demo plan.
+Optional: set a CoinGecko API key in `.env.local` for higher rate limits.
 
-## Scripts
+| Variable | Plan | Base URL |
+|----------|------|----------|
+| `COINGECKO_API_KEY` | Demo (free) | `api.coingecko.com` |
+| `COINGECKO_PRO_API_KEY` | Pro (paid) | `pro-api.coingecko.com` |
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
+GeckoTerminal uses the [public DEX API](https://www.geckoterminal.com/dex-api) — no key required.
 
 ## Data sources
 
-- [CoinGecko API](https://www.coingecko.com/en/api) — prices, market cap, trending
-- [DefiLlama API](https://defillama.com/docs/api) — protocol TVL, yields, stablecoins
+- [CoinGecko API](https://www.coingecko.com/en/api) — prices, search, gainers/losers, charts
+- [GeckoTerminal DEX API](https://www.geckoterminal.com/dex-api) — trending pools, pool search

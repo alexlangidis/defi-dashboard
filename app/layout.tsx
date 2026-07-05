@@ -1,23 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "DeFi Dashboard",
-  description: "Portfolio DeFi dashboard with market data, TVL, yields, and watchlist",
+  title: "DeFi Dashboard — Live crypto & on-chain markets",
+  description:
+    "Premium DeFi dashboard with live market data, DEX pools, gainers, losers, and watchlist from CoinGecko and GeckoTerminal.",
 };
 
 export default function RootLayout({
@@ -26,12 +16,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
-      suppressHydrationWarning
-    >
-      <body className="min-h-full">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+      <body
+        className="min-h-full bg-background text-foreground"
+        suppressHydrationWarning
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

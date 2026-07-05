@@ -18,9 +18,10 @@ export function PercentBadge({
     <Badge
       variant="outline"
       className={cn(
+        "rounded-full px-2 py-0.5 text-xs font-medium tabular-nums transition-colors",
         positive
-          ? "border-emerald-500/30 text-emerald-500"
-          : "border-red-500/30 text-red-500",
+          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+          : "border-red-500/30 bg-red-500/10 text-red-400",
         className,
       )}
     >

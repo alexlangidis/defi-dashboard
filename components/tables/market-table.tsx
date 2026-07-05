@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { DataTable } from "@/components/data-table";
 import { PercentBadge } from "@/components/percent-badge";
+import { Sparkline } from "@/components/sparkline";
 import { WatchlistButton } from "@/components/watchlist-button";
 import type { MarketCoin } from "@/lib/api/coingecko";
 import { formatUsd } from "@/lib/format";
@@ -41,6 +42,22 @@ const columns: ColumnDef<MarketCoin>[] = [
         </div>
       </div>
     ),
+  },
+  {
+    id: "sparkline",
+    header: "7d",
+    cell: ({ row }) => {
+      const prices = row.original.sparkline_in_7d?.price;
+      if (!prices?.length) return "—";
+      return (
+        <Sparkline
+          data={prices}
+          positive={
+            (row.original.price_change_percentage_7d_in_currency ?? 0) >= 0
+          }
+        />
+      );
+    },
   },
   {
     accessorKey: "current_price",

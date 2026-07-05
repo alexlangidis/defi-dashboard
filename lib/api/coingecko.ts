@@ -1,16 +1,48 @@
-const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
+type CoinGeckoConfig = {
+  baseUrl: string;
+  apiKey: string | null;
+  headerName: string | null;
+};
+
+function getCoinGeckoConfig(): CoinGeckoConfig {
+  const proKey = process.env.COINGECKO_PRO_API_KEY;
+  const demoKey = process.env.COINGECKO_API_KEY;
+
+  if (proKey) {
+    return {
+      baseUrl: "https://pro-api.coingecko.com/api/v3",
+      apiKey: proKey,
+      headerName: "x-cg-pro-api-key",
+    };
+  }
+
+  if (demoKey) {
+    return {
+      baseUrl: "https://api.coingecko.com/api/v3",
+      apiKey: demoKey,
+      headerName: "x-cg-demo-api-key",
+    };
+  }
+
+  return {
+    baseUrl: "https://api.coingecko.com/api/v3",
+    apiKey: null,
+    headerName: null,
+  };
+}
 
 function getHeaders(): HeadersInit {
+  const { apiKey, headerName } = getCoinGeckoConfig();
   const headers: HeadersInit = { Accept: "application/json" };
-  const apiKey = process.env.COINGECKO_API_KEY;
-  if (apiKey) {
-    headers["x-cg-demo-api-key"] = apiKey;
+  if (apiKey && headerName) {
+    headers[headerName] = apiKey;
   }
   return headers;
 }
 
 async function fetchCoinGecko<T>(path: string, revalidate = 60): Promise<T> {
-  const res = await fetch(`${COINGECKO_BASE}${path}`, {
+  const { baseUrl } = getCoinGeckoConfig();
+  const res = await fetch(`${baseUrl}${path}`, {
     headers: getHeaders(),
     next: { revalidate },
   });
@@ -123,4 +155,45 @@ export async function getCoinsByIds(ids: string[]) {
     `/coins/markets?vs_currency=usd&ids=${ids.join(",")}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`,
     30,
   );
+}
+
+export type SearchCoin = {
+  id: string;
+  name: string;
+  symbol: string;
+  market_cap_rank: number | null;
+  thumb: string;
+};
+
+export async function searchCoins(query: string) {
+  if (!query.trim()) return [];
+  const data = await fetchCoinGecko<{ coins: SearchCoin[] }>(
+    `/search?query=${encodeURIComponent(query)}`,
+    300,
+  );
+  return data.coins.slice(0, 8);
+}
+
+export async function getTopGainers(perPage = 10) {
+  return fetchCoinGecko<MarketCoin[]>(
+    `/coins/markets?vs_currency=usd&order=price_change_percentage_24h_desc&per_page=${perPage}&page=1&sparkline=true&price_change_percentage=7d`,
+    60,
+  );
+}
+
+export async function getTopLosers(perPage = 10) {
+  return fetchCoinGecko<MarketCoin[]>(
+    `/coins/markets?vs_currency=usd&order=price_change_percentage_24h_asc&per_page=${perPage}&page=1&sparkline=true&price_change_percentage=7d`,
+    60,
+  );
+}
+
+export type MarketChartPoint = [number, number];
+
+export async function getCoinMarketChart(id: string, days = 7) {
+  const data = await fetchCoinGecko<{ prices: MarketChartPoint[] }>(
+    `/coins/${id}/market_chart?vs_currency=usd&days=${days}`,
+    120,
+  );
+  return data.prices;
 }

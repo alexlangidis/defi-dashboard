@@ -2,17 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BarChart3,
-  Coins,
-  Home,
-  Landmark,
-  LineChart,
-  Newspaper,
-  Star,
-  TrendingUp,
-} from "lucide-react";
+import { LineChart } from "lucide-react";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Sidebar,
   SidebarContent,
@@ -25,58 +17,79 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
-const navItems = [
-  { title: "Dashboard", href: "/", icon: Home },
-  { title: "Trending", href: "/trending", icon: TrendingUp },
-  { title: "Protocols", href: "/protocols", icon: Landmark },
-  { title: "Yield Pools", href: "/yields", icon: BarChart3 },
-  { title: "Stablecoins", href: "/stablecoins", icon: Coins },
-  { title: "Watchlist", href: "/watchlist", icon: Star },
-  { title: "Market Brief", href: "/market-brief", icon: Newspaper },
-];
+import { NAV_ITEMS } from "@/lib/constants/navigation";
 
 export function AppSidebar() {
   const pathname = usePathname();
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <LineChart className="size-5 text-primary" />
-          <span>DeFi Dashboard</span>
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="relative flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent glow-primary">
+            <LineChart className="size-4 text-primary-foreground" />
+          </div>
+          <div className="flex flex-col leading-none">
+            <span className="text-sm font-semibold tracking-tight">
+              DeFi Dashboard
+            </span>
+            <span className="text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+              Live markets
+            </span>
+          </div>
         </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[0.65rem] uppercase tracking-wider">
+            Navigation
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={
-                      item.href === "/"
-                        ? pathname === "/"
-                        : pathname.startsWith(item.href)
-                    }
-                  >
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {NAV_ITEMS.map((item) => {
+                const active =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(item.href);
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <Link href={item.href}>
+                        <item.icon
+                          className={active ? "text-primary" : undefined}
+                        />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-4">
-        <p className="text-xs text-muted-foreground">
-          Free data from CoinGecko & DefiLlama. No API keys required.
-        </p>
+      <SidebarFooter className="space-y-3 border-t border-sidebar-border p-4">
+        <div className="flex items-center justify-between">
+          <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+            Theme
+          </p>
+          <ThemeToggle />
+        </div>
+        <div className="space-y-1">
+          <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+            Data
+          </p>
+          <p className="text-xs text-foreground/60">
+            CoinGecko · GeckoTerminal
+          </p>
+          <p className="text-[0.7rem] text-muted-foreground">
+            Press{" "}
+            <kbd className="rounded border border-border bg-muted/60 px-1 py-0.5 font-mono text-[0.6rem]">
+              ⌘K
+            </kbd>{" "}
+            to search
+          </p>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

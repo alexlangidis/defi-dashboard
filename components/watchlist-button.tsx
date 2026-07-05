@@ -4,7 +4,7 @@ import { Star } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { useWatchlist } from "@/hooks/use-watchlist";
+import { useWatchlist } from "@/stores/watchlist-store";
 
 type WatchlistButtonProps = {
   coinId: string;

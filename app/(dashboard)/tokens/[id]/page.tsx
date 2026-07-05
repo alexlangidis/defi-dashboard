@@ -1,12 +1,14 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
+import { AreaChart } from "@/components/area-chart";
+import { DashboardHeader } from "@/components/dashboard-header";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { PercentBadge } from "@/components/percent-badge";
 import { StatCard } from "@/components/stat-card";
 import { WatchlistButton } from "@/components/watchlist-button";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { getCoinDetail } from "@/lib/api/coingecko";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCoinDetail, getCoinMarketChart } from "@/lib/api/coingecko";
 import { formatNumber, formatUsd } from "@/lib/format";
 
 export default async function TokenDetailPage({
@@ -17,100 +19,145 @@ export default async function TokenDetailPage({
   const { id } = await params;
 
   let coin;
+  let chart: Array<{ x: number; y: number }> = [];
+
   try {
-    coin = await getCoinDetail(id);
+    const [detail, prices] = await Promise.all([
+      getCoinDetail(id),
+      getCoinMarketChart(id, 7),
+    ]);
+    coin = detail;
+    chart = prices.map(([ts, price]) => ({ x: ts, y: price }));
   } catch {
     notFound();
   }
 
   const md = coin.market_data;
+  const athDistance =
+    ((md.current_price.usd - md.ath.usd) / md.ath.usd) * 100;
+  const positive = md.price_change_percentage_24h >= 0;
 
   return (
     <>
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-        <SidebarTrigger />
-        <Separator orientation="vertical" className="h-4" />
-        <div className="flex flex-1 items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Image
-              src={coin.image.large}
-              alt={coin.name}
-              width={32}
-              height={32}
-              className="rounded-full"
+      <DashboardHeader title={coin.name} description={coin.symbol.toUpperCase()} />
+      <main className="flex-1 space-y-6 p-4 md:p-8">
+        <FadeIn>
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/40 p-6 shadow-card md:p-8">
+            <div
+              className={`pointer-events-none absolute -right-20 -top-20 size-56 rounded-full blur-3xl ${
+                positive ? "bg-emerald-500/15" : "bg-red-500/15"
+              }`}
             />
-            <div>
-              <h1 className="text-sm font-semibold">{coin.name}</h1>
-              <p className="text-xs text-muted-foreground uppercase">
-                {coin.symbol}
-              </p>
+            <div className="relative flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <Image
+                  src={coin.image.large}
+                  alt={coin.name}
+                  width={56}
+                  height={56}
+                  className="rounded-full ring-2 ring-foreground/10"
+                />
+                <div>
+                  <p className="text-3xl font-semibold tracking-tight tabular-nums md:text-4xl">
+                    {formatUsd(md.current_price.usd)}
+                  </p>
+                  <div className="mt-1.5 flex items-center gap-2.5">
+                    <PercentBadge value={md.price_change_percentage_24h} />
+                    <span className="text-sm text-muted-foreground">
+                      Rank #{coin.market_cap_rank}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <WatchlistButton
+                coinId={coin.id}
+                symbol={coin.symbol}
+                name={coin.name}
+                image={coin.image.small}
+              />
             </div>
           </div>
-          <WatchlistButton
-            coinId={coin.id}
-            symbol={coin.symbol}
-            name={coin.name}
-            image={coin.image.small}
-          />
-        </div>
-      </header>
-      <main className="flex-1 space-y-6 p-4 md:p-6">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            title="Price"
-            value={formatUsd(md.current_price.usd)}
-            change={<PercentBadge value={md.price_change_percentage_24h} />}
-          />
-          <StatCard
-            title="Market Cap"
-            value={formatUsd(md.market_cap.usd, true)}
-          />
-          <StatCard
-            title="24h Volume"
-            value={formatUsd(md.total_volume.usd, true)}
-          />
-          <StatCard
-            title="Rank"
-            value={`#${coin.market_cap_rank}`}
-          />
-        </div>
+        </FadeIn>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="7d Change"
-            value=""
-            change={<PercentBadge value={md.price_change_percentage_7d} />}
-          />
-          <StatCard
-            title="30d Change"
-            value=""
-            change={<PercentBadge value={md.price_change_percentage_30d} />}
-          />
-          <StatCard title="ATH" value={formatUsd(md.ath.usd)} />
-          <StatCard title="ATL" value={formatUsd(md.atl.usd)} />
-        </div>
+        <FadeIn delay={0.05}>
+          <Card className="relative overflow-hidden">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium tracking-tight text-muted-foreground">
+                7-Day Price
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="h-40">
+              <AreaChart data={chart} />
+            </CardContent>
+          </Card>
+        </FadeIn>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <StatCard
-            title="Circulating Supply"
-            value={formatNumber(md.circulating_supply)}
-          />
-          <StatCard
-            title="Total Supply"
-            value={formatNumber(md.total_supply)}
-          />
-        </div>
+        <StaggerContainer className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StaggerItem>
+            <StatCard
+              title="Market Cap"
+              value={formatUsd(md.market_cap.usd, true)}
+              accent="primary"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              title="24h Volume"
+              value={formatUsd(md.total_volume.usd, true)}
+              accent="violet"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              title="7d Change"
+              change={<PercentBadge value={md.price_change_percentage_7d} />}
+              value=""
+              accent={md.price_change_percentage_7d >= 0 ? "emerald" : "primary"}
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              title="30d Change"
+              change={<PercentBadge value={md.price_change_percentage_30d} />}
+              value=""
+              accent={md.price_change_percentage_30d >= 0 ? "emerald" : "primary"}
+            />
+          </StaggerItem>
+        </StaggerContainer>
+
+        <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" gap={0.04}>
+          <StaggerItem>
+            <StatCard title="ATH" value={formatUsd(md.ath.usd)} />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard title="From ATH" value={`${athDistance.toFixed(1)}%`} />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard title="Circulating" value={formatNumber(md.circulating_supply)} />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard title="Total Supply" value={formatNumber(md.total_supply)} />
+          </StaggerItem>
+        </StaggerContainer>
 
         {coin.description.en ? (
-          <div className="rounded-lg border p-4">
-            <h2 className="mb-2 text-sm font-semibold">About</h2>
-            <div
-              className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground [&>p]:mb-2"
-              dangerouslySetInnerHTML={{
-                __html: coin.description.en.split("</p>")[0] + "</p>",
-              }}
-            />
-          </div>
+          <FadeIn delay={0.1}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium tracking-tight">
+                  About {coin.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div
+                  className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground [&>p]:mb-2"
+                  dangerouslySetInnerHTML={{
+                    __html: coin.description.en.split("</p>")[0] + "</p>",
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </FadeIn>
         ) : null}
       </main>
     </>
