@@ -2,9 +2,9 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { PoolDetailView } from "@/components/pool-detail-view";
 import { PoolUnavailable } from "@/components/pool-unavailable";
 import { getPoolByAddress, getPoolOhlcv } from "@/lib/api/geckoterminal";
+import { parseNetworkId, parsePoolAddress } from "@/lib/api/params";
 import { DEFAULT_POOL_CHART_PERIOD } from "@/lib/chart-periods";
 import { enrichDexPool, getNetworkIconLookup } from "@/lib/network-icons";
-import { normalizePoolAddress } from "@/lib/pool-path";
 
 export const revalidate = 300;
 
@@ -13,8 +13,13 @@ export default async function DexPoolDetailPage({
 }: {
   params: Promise<{ network: string; address: string }>;
 }) {
-  const { network, address: rawAddress } = await params;
-  const address = normalizePoolAddress(rawAddress);
+  const { network: rawNetwork, address: rawAddress } = await params;
+  const network = parseNetworkId(rawNetwork);
+  const address = parsePoolAddress(rawAddress);
+
+  if (!network || !address) {
+    return <PoolUnavailable network={rawNetwork} address={rawAddress} />;
+  }
 
   const poolRaw = await getPoolByAddress(network, address);
   if (!poolRaw) {

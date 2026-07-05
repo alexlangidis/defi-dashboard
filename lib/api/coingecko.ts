@@ -1,5 +1,7 @@
 import { cache } from "react";
 
+import { parseCoinId } from "@/lib/api/params";
+
 type CoinGeckoConfig = {
   baseUrl: string;
   apiKey: string | null;
@@ -159,8 +161,13 @@ export const getMarketCoins = cache(async (perPage = 20) => {
 });
 
 export async function getCoinDetail(id: string) {
+  const coinId = parseCoinId(id);
+  if (!coinId) {
+    throw new Error("Invalid coin id");
+  }
+
   const data = await fetchCoinGecko<CoinDetail>(
-    `/coins/${id}?localization=false&tickers=false&community_data=false&developer_data=false`,
+    `/coins/${encodeURIComponent(coinId)}?localization=false&tickers=false&community_data=false&developer_data=false`,
     60,
   );
   if (!data) {
@@ -174,9 +181,10 @@ export const getGlobalData = cache(async () => {
 });
 
 export const getCoinsByIds = cache(async (ids: string[]) => {
-  if (ids.length === 0) return [];
+  const safeIds = ids.map((id) => parseCoinId(id)).filter(Boolean);
+  if (safeIds.length === 0) return [];
   const data = await fetchCoinGecko<MarketCoin[]>(
-    `/coins/markets?vs_currency=usd&ids=${ids.join(",")}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`,
+    `/coins/markets?vs_currency=usd&ids=${safeIds.join(",")}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`,
     30,
   );
   return data ?? [];
@@ -322,8 +330,11 @@ function splitMarketMovers(coins: MarketCoin[], perPage: number) {
 export type MarketChartPoint = [number, number];
 
 export async function getCoinMarketChart(id: string, days = 7) {
+  const coinId = parseCoinId(id);
+  if (!coinId) return [];
+
   const data = await fetchCoinGecko<{ prices: MarketChartPoint[] }>(
-    `/coins/${id}/market_chart?vs_currency=usd&days=${days}`,
+    `/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=usd&days=${days}`,
     120,
   );
   return data?.prices ?? [];

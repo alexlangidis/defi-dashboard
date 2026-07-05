@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import { DashboardHeader } from "@/components/dashboard-header";
 import { CoinImage } from "@/components/coin-image";
 import { PercentBadge } from "@/components/percent-badge";
 import { Sparkline } from "@/components/sparkline";

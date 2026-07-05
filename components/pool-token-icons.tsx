@@ -20,21 +20,18 @@ function TokenIcon({
 }) {
   const setIcon = usePoolIconCacheStore((s) => s.setIcon);
   const getIcon = usePoolIconCacheStore((s) => s.getIcon);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const cachedUrl =
     token.address && network ? getIcon(network, token.address) : undefined;
-  const src = !failed ? (token.imageUrl ?? cachedUrl) : undefined;
+  const imageUrl = token.imageUrl ?? cachedUrl;
+  const src = imageUrl !== failed ? imageUrl : undefined;
 
   useEffect(() => {
     if (token.imageUrl && token.address && network) {
       setIcon(network, token.address, token.imageUrl);
     }
   }, [network, token.address, token.imageUrl, setIcon]);
-
-  useEffect(() => {
-    setFailed(false);
-  }, [src]);
 
   if (src) {
     return (
@@ -43,7 +40,7 @@ function TokenIcon({
         alt={token.symbol}
         size={size}
         className={cn("ring-2 ring-background", className)}
-        onError={() => setFailed(true)}
+        onError={() => setFailed(src)}
       />
     );
   }

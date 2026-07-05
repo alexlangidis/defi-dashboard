@@ -1,23 +1,25 @@
 import { NextResponse } from "next/server";
 
 import { getPoolOhlcv } from "@/lib/api/geckoterminal";
+import { parseNetworkId, parsePoolAddress } from "@/lib/api/params";
 import { getPoolChartPeriod } from "@/lib/chart-periods";
-import { normalizePoolAddress } from "@/lib/pool-path";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const network = searchParams.get("network");
-  const address = searchParams.get("address");
+  const network = parseNetworkId(searchParams.get("network"));
+  const address = parsePoolAddress(searchParams.get("address"));
 
   if (!network || !address) {
-    return NextResponse.json({ error: "Missing network or address" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid network or address" },
+      { status: 400 },
+    );
   }
 
   const period = getPoolChartPeriod(searchParams.get("period") ?? "7d");
-  const normalized = normalizePoolAddress(address);
   const ohlcv = await getPoolOhlcv(
     network,
-    normalized,
+    address,
     period.timeframe,
     period.limit,
   );

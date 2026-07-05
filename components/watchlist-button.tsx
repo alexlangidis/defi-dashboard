@@ -1,10 +1,10 @@
 "use client";
 
 import { Star } from "lucide-react";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useWatchlist } from "@/stores/watchlist-store";
 
 type WatchlistButtonProps = {
@@ -21,9 +21,7 @@ export function WatchlistButton({
   image,
 }: WatchlistButtonProps) {
   const { isWatched, toggle } = useWatchlist();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const mounted = useHydrated();
 
   const watched = mounted ? isWatched(coinId) : false;
 

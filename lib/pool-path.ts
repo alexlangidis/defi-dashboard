@@ -1,6 +1,7 @@
+import { parsePoolAddress } from "@/lib/api/params";
+
 export function normalizePoolAddress(address: string) {
-  const decoded = decodeURIComponent(address);
-  return decoded.startsWith("0x") ? decoded.toLowerCase() : decoded;
+  return parsePoolAddress(address) ?? "";
 }
 
 export function poolAddressesMatch(a: string, b: string) {

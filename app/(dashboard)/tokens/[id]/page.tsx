@@ -12,7 +12,9 @@ import { StatCard } from "@/components/stat-card";
 import { WatchlistButton } from "@/components/watchlist-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCoinDetail, getCoinMarketChart } from "@/lib/api/coingecko";
+import { parseCoinId } from "@/lib/api/params";
 import { DEFAULT_TOKEN_CHART_PERIOD } from "@/lib/chart-periods";
+import { getFirstParagraphText, getSafeExternalUrl } from "@/lib/content";
 import { formatNumber, formatUsd } from "@/lib/format";
 
 function formatDate(iso: string) {
@@ -28,7 +30,12 @@ export default async function TokenDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const id = parseCoinId(rawId);
+
+  if (!id) {
+    notFound();
+  }
 
   let coin;
   let chart: Array<{ x: number; y: number }> = [];
@@ -48,6 +55,16 @@ export default async function TokenDetailPage({
   const athDistance =
     ((md.current_price.usd - md.ath.usd) / md.ath.usd) * 100;
   const positive = md.price_change_percentage_24h >= 0;
+  const homepageUrls = coin.links.homepage
+    .map(getSafeExternalUrl)
+    .filter((url): url is string => url !== null);
+  const explorerUrl = coin.links.blockchain_site
+    .map(getSafeExternalUrl)
+    .find(Boolean);
+  const twitterUrl = coin.links.twitter_screen_name
+    ? `https://twitter.com/${encodeURIComponent(coin.links.twitter_screen_name)}`
+    : null;
+  const description = getFirstParagraphText(coin.description.en);
 
   return (
     <>
@@ -170,9 +187,7 @@ export default async function TokenDetailPage({
           </FadeIn>
         ) : null}
 
-        {(coin.links.homepage[0] ||
-          coin.links.blockchain_site[0] ||
-          coin.links.twitter_screen_name) ? (
+        {(homepageUrls.length > 0 || explorerUrl || twitterUrl) ? (
           <FadeIn delay={0.09}>
             <Card>
               <CardHeader>
@@ -181,7 +196,7 @@ export default async function TokenDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-3">
-                {coin.links.homepage.filter(Boolean).map((url) => (
+                {homepageUrls.map((url) => (
                   <Link
                     key={url}
                     href={url}
@@ -194,9 +209,9 @@ export default async function TokenDetailPage({
                     <ExternalLink className="size-3" />
                   </Link>
                 ))}
-                {coin.links.blockchain_site.filter(Boolean)[0] ? (
+                {explorerUrl ? (
                   <Link
-                    href={coin.links.blockchain_site.filter(Boolean)[0]}
+                    href={explorerUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
@@ -205,9 +220,9 @@ export default async function TokenDetailPage({
                     <ExternalLink className="size-3" />
                   </Link>
                 ) : null}
-                {coin.links.twitter_screen_name ? (
+                {twitterUrl ? (
                   <Link
-                    href={`https://twitter.com/${coin.links.twitter_screen_name}`}
+                    href={twitterUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
@@ -221,7 +236,7 @@ export default async function TokenDetailPage({
           </FadeIn>
         ) : null}
 
-        {coin.description.en ? (
+        {description ? (
           <FadeIn delay={0.1}>
             <Card>
               <CardHeader>
@@ -230,12 +245,9 @@ export default async function TokenDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div
-                  className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground [&>p]:mb-2"
-                  dangerouslySetInnerHTML={{
-                    __html: coin.description.en.split("</p>")[0] + "</p>",
-                  }}
-                />
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {description}
+                </p>
               </CardContent>
             </Card>
           </FadeIn>

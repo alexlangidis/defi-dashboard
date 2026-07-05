@@ -59,22 +59,32 @@ export function GlobalSearch() {
   }, []);
 
   useEffect(() => {
-    if (!query.trim()) {
-      setResults({ coins: [], pools: [] });
+    const trimmed = query.trim();
+    if (!trimmed) {
       return;
     }
 
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`, {
+          signal: controller.signal,
+        });
         if (res.ok) setResults(await res.json());
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
       } finally {
         setLoading(false);
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
   }, [query]);
 
   function go(path: string, historyItem?: Parameters<typeof addHistory>[0]) {
@@ -139,7 +149,7 @@ export function GlobalSearch() {
               ))}
             </CommandGroup>
           ) : null}
-          {results.coins.length > 0 ? (
+          {query.trim() && results.coins.length > 0 ? (
             <CommandGroup heading="Tokens">
               {results.coins.map((coin) => (
                 <CommandItem
@@ -168,10 +178,10 @@ export function GlobalSearch() {
               ))}
             </CommandGroup>
           ) : null}
-          {results.coins.length > 0 && results.pools.length > 0 ? (
+          {query.trim() && results.coins.length > 0 && results.pools.length > 0 ? (
             <CommandSeparator />
           ) : null}
-          {results.pools.length > 0 ? (
+          {query.trim() && results.pools.length > 0 ? (
             <CommandGroup heading="DEX Pools">
               {results.pools.map((pool) => (
                 <CommandItem

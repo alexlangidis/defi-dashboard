@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 
 import { searchCoins } from "@/lib/api/coingecko";
 import { searchPools } from "@/lib/api/geckoterminal";
+import { parseSearchQuery } from "@/lib/api/params";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const q = searchParams.get("q")?.trim();
+  const q = parseSearchQuery(searchParams.get("q"));
 
-  if (!q || q.length < 2) {
+  if (!q) {
     return NextResponse.json({ coins: [], pools: [] });
   }
 

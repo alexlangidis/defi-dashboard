@@ -1,7 +1,8 @@
 import { cache } from "react";
 
+import { parseNetworkId, parsePoolAddress } from "@/lib/api/params";
 import { formatDexName, getDexImageUrl } from "@/lib/dex-icons";
-import { normalizePoolAddress, poolAddressesMatch } from "@/lib/pool-path";
+import { poolAddressesMatch } from "@/lib/pool-path";
 
 const GECKO_TERMINAL_BASE = "https://api.geckoterminal.com/api/v2";
 const API_VERSION = "20230203";
@@ -278,14 +279,17 @@ export const getTrendingDexPools = cache(async (page = 1): Promise<DexPool[]> =>
 
 export const getTrendingDexPoolsByNetwork = cache(
   async (network: string, page = 1): Promise<DexPool[]> => {
+    const networkId = parseNetworkId(network);
+    if (!networkId) return [];
+
     const allPools = await getTrendingDexPools(page);
-    const filtered = allPools.filter((pool) => pool.network === network);
+    const filtered = allPools.filter((pool) => pool.network === networkId);
     if (filtered.length > 0) return filtered;
 
     const data = await fetchGeckoTerminal<PoolsResponse>(
-      withPoolInclude(`/networks/${network}/trending_pools?page=${page}`),
+      withPoolInclude(`/networks/${encodeURIComponent(networkId)}/trending_pools?page=${page}`),
     );
-    return mapPoolsResponse(data, network);
+    return mapPoolsResponse(data, networkId);
   },
 );
 
@@ -321,14 +325,18 @@ export const getNetworks = cache(async () => {
 });
 
 export async function getPoolByAddress(network: string, address: string) {
-  return getPoolByAddressCached(network, normalizePoolAddress(address));
+  const networkId = parseNetworkId(network);
+  const poolAddress = parsePoolAddress(address);
+  if (!networkId || !poolAddress) return null;
+
+  return getPoolByAddressCached(networkId, poolAddress);
 }
 
 const getPoolByAddressCached = cache(async (network: string, address: string) => {
   const data = await fetchGeckoTerminal<{
     data: PoolsResponse["data"][number];
     included?: Array<IncludedToken | IncludedDex>;
-  }>(withPoolInclude(`/networks/${network}/pools/${address}`));
+  }>(withPoolInclude(`/networks/${encodeURIComponent(network)}/pools/${encodeURIComponent(address)}`));
 
   if (data?.data) {
     const included = buildIncludedMaps(data.included);
@@ -374,7 +382,10 @@ export const getPoolOhlcv = cache(async (
   timeframe = "hour",
   limit = 48,
 ) => {
-  const address = normalizePoolAddress(poolAddress);
+  const networkId = parseNetworkId(network);
+  const address = parsePoolAddress(poolAddress);
+  if (!networkId || !address) return [];
+
   const data = await fetchGeckoTerminal<{
     data: {
       attributes: {
@@ -382,7 +393,7 @@ export const getPoolOhlcv = cache(async (
       };
     };
   }>(
-    `/networks/${network}/pools/${address}/ohlcv/${timeframe}?aggregate=1&limit=${limit}`,
+    `/networks/${encodeURIComponent(networkId)}/pools/${encodeURIComponent(address)}/ohlcv/${timeframe}?aggregate=1&limit=${limit}`,
   );
 
   if (!data) return [];

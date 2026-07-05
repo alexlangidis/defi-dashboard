@@ -1,4 +1,4 @@
-import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
+import { StaggerContainer, StaggerItem } from "@/components/animations";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { MoverCard } from "@/components/mover-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
