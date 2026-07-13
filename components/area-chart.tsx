@@ -6,6 +6,8 @@ import { formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const VIEW_WIDTH = 400;
+const VIEW_X_PADDING = 4;
+const DOMAIN_PADDING_RATIO = 0.1;
 
 function toChartDate(x: number) {
   const date = new Date(x > 1e11 ? x : x * 1000);
@@ -24,7 +26,9 @@ function getPointCoords(
   min: number,
   range: number,
 ) {
-  const x = (index / (data.length - 1)) * VIEW_WIDTH;
+  const x =
+    VIEW_X_PADDING +
+    (index / (data.length - 1)) * (VIEW_WIDTH - VIEW_X_PADDING * 2);
   const y = height - ((data[index].y - min) / range) * (height - 12) - 6;
   return { x, y };
 }
@@ -49,9 +53,14 @@ export function AreaChart({
   if (data.length < 2) return null;
 
   const ys = data.map((d) => d.y);
-  const min = Math.min(...ys);
-  const max = Math.max(...ys);
-  const range = max - min || 1;
+  const dataMin = Math.min(...ys);
+  const dataMax = Math.max(...ys);
+  const dataRange = dataMax - dataMin;
+  const domainPadding = dataRange
+    ? dataRange * DOMAIN_PADDING_RATIO
+    : Math.max(Math.abs(dataMax) * DOMAIN_PADDING_RATIO, 1);
+  const min = dataMin - domainPadding;
+  const range = dataRange + domainPadding * 2;
   const isUp = data[data.length - 1].y >= data[0].y;
   const stroke = isUp ? "#34d399" : "#f87171";
 
@@ -62,7 +71,7 @@ export function AreaChart({
     })
     .join(" ");
 
-  const areaPoints = `0,${height} ${linePoints} ${VIEW_WIDTH},${height}`;
+  const areaPoints = `${VIEW_X_PADDING},${height} ${linePoints} ${VIEW_WIDTH - VIEW_X_PADDING},${height}`;
 
   const activePoint =
     activeIndex != null
@@ -138,18 +147,21 @@ export function AreaChart({
               strokeWidth="1"
               vectorEffect="non-scaling-stroke"
             />
-            <circle
-              cx={activePoint.x}
-              cy={activePoint.y}
-              r={4}
-              fill={stroke}
-              stroke="var(--background)"
-              strokeWidth={2}
-              vectorEffect="non-scaling-stroke"
-            />
           </>
         ) : null}
       </svg>
+
+      {activePoint ? (
+        <span
+          className="pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background"
+          style={{
+            left: `${(activePoint.x / VIEW_WIDTH) * 100}%`,
+            top: `${(activePoint.y / height) * 100}%`,
+            backgroundColor: stroke,
+          }}
+          aria-hidden="true"
+        />
+      ) : null}
 
       {activeIndex != null ? (
         <div
